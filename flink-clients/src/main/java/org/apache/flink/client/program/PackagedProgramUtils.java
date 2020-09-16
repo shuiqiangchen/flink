@@ -26,6 +26,8 @@ import org.apache.flink.configuration.Configuration;
 import org.apache.flink.optimizer.CompilerException;
 import org.apache.flink.runtime.jobgraph.JobGraph;
 
+import org.apache.commons.collections.CollectionUtils;
+
 import javax.annotation.Nullable;
 
 import java.io.ByteArrayOutputStream;
@@ -43,6 +45,7 @@ import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import static org.apache.flink.util.Preconditions.checkState;
@@ -53,9 +56,9 @@ import static org.apache.flink.util.Preconditions.checkState;
 public enum PackagedProgramUtils {
 	;
 
-	private static final String PYTHON_DRIVER_CLASS_NAME = "org.apache.flink.client.python.PythonDriver";
-
 	private static final String PYTHON_GATEWAY_CLASS_NAME = "org.apache.flink.client.python.PythonGatewayServer";
+
+	public static final String PYTHON_DRIVER_CLASS_NAME = "org.apache.flink.client.python.PythonDriver";
 
 	/**
 	 * Creates a {@link JobGraph} with a specified {@link JobID}
@@ -188,6 +191,10 @@ public enum PackagedProgramUtils {
 	public static Boolean isPython(String entryPointClassName) {
 		return (entryPointClassName != null) &&
 			(entryPointClassName.equals(PYTHON_DRIVER_CLASS_NAME) || entryPointClassName.equals(PYTHON_GATEWAY_CLASS_NAME));
+	}
+
+	public static Boolean isPython(String[] programArguments){
+		return CollectionUtils.containsAny(Arrays.asList(programArguments), Arrays.asList("-py", "-pym"));
 	}
 
 	public static URL getPythonJar() {

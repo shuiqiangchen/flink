@@ -183,7 +183,13 @@ public class CliFrontend {
 		final CustomCommandLine activeCommandLine =
 				validateAndGetActiveCommandLine(checkNotNull(commandLine));
 
-		final ProgramOptions programOptions = new ProgramOptions(commandLine);
+		ProgramOptions programOptions;
+
+		if (ProgramOptionsUtils.isPythonEntryPoint(commandLine)) {
+			programOptions = ProgramOptionsUtils.createPythonApplicationProgramOptions(commandLine);
+		} else {
+			programOptions = new ProgramOptions(commandLine);
+		}
 
 		final ApplicationDeployer deployer =
 				new ApplicationClusterDeployer(clusterClientServiceLoader);
