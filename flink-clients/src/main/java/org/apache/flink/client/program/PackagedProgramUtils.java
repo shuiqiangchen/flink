@@ -194,7 +194,8 @@ public enum PackagedProgramUtils {
 	}
 
 	public static Boolean isPython(String[] programArguments){
-		return CollectionUtils.containsAny(Arrays.asList(programArguments), Arrays.asList("-py", "-pym"));
+		return CollectionUtils.containsAny(Arrays.asList(programArguments), Arrays.asList("-py", "-pym", "--python",
+			"--pyModule"));
 	}
 
 	public static URL getPythonJar() {

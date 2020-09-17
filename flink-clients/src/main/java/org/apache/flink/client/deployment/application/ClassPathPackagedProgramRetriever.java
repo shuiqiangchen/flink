@@ -113,9 +113,9 @@ public class ClassPathPackagedProgramRetriever implements PackagedProgramRetriev
 	public PackagedProgram getPackagedProgram() throws FlinkException {
 		try {
 
-			// It is Python job if program arguments contain "-py" or "-pym", set the fixed jobClassName and jarFile
-			// path.
-			if (PackagedProgramUtils.isPython(programArguments)){
+			// It is Python job if program arguments contain "-py"/--python" or "-pym/--pyModule", set the fixed
+			// jobClassName and jarFile path.
+			if (PackagedProgramUtils.isPython(jobClassName) || PackagedProgramUtils.isPython(programArguments)){
 				String pythonJobClassName = PackagedProgramUtils.PYTHON_DRIVER_CLASS_NAME;
 				File pythonJarFile = new File(PackagedProgramUtils.getPythonJar().getPath());
 				return PackagedProgram.newBuilder()

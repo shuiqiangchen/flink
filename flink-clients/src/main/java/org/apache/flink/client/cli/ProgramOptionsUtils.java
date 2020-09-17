@@ -104,7 +104,10 @@ public enum ProgramOptionsUtils {
 		ProgramOptions pythonProgramOptions = createPythonProgramOptions(line);
 		Field jarFilePath = pythonProgramOptions.getClass().getSuperclass().getDeclaredField("jarFilePath");
 		jarFilePath.setAccessible(true);
-		String pythonJarPath = "local:///opt/flink/opt/" + FilenameUtils.getName(PackagedProgramUtils.getPythonJar().getPath());
+		// This is the python jar path in client, which is invalid at runtime and it will be replaced with the actual
+		// path when retrieving the packaged program in the job manager container.
+		String pythonJarPath = "local:///opt/flink/opt/" + FilenameUtils.getName(PackagedProgramUtils.getPythonJar()
+			.getPath());
 		jarFilePath.set(pythonProgramOptions, pythonJarPath);
 		return pythonProgramOptions;
 	}
@@ -114,7 +117,8 @@ public enum ProgramOptionsUtils {
 		NoSuchFieldException, IllegalAccessException {
 
 			final Options commandOptions = CliFrontendParser.getRunCommandOptions();
-			final CommandLine commandLine = CliFrontendParser.parse(commandOptions, packagedProgram.getArguments(), true);
+			final CommandLine commandLine = CliFrontendParser.parse(commandOptions, packagedProgram.getArguments(),
+				true);
 			final ProgramOptions programOptions = createPythonProgramOptions(commandLine);
 
 			//Extract real program args by eliminating the PyFlink dependency options
