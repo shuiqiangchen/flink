@@ -116,7 +116,7 @@ public class ClassPathPackagedProgramRetriever implements PackagedProgramRetriev
 			// It is Python job if program arguments contain "-py"/--python" or "-pym/--pyModule", set the fixed
 			// jobClassName and jarFile path.
 			if (PackagedProgramUtils.isPython(jobClassName) || PackagedProgramUtils.isPython(programArguments)){
-				String pythonJobClassName = PackagedProgramUtils.PYTHON_DRIVER_CLASS_NAME;
+				String pythonJobClassName = PackagedProgramUtils.getPythonDriverClassName();
 				File pythonJarFile = new File(PackagedProgramUtils.getPythonJar().getPath());
 				return PackagedProgram.newBuilder()
 					.setUserClassPaths(new ArrayList<>(userClassPaths))

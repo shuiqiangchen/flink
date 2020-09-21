@@ -58,7 +58,7 @@ public enum PackagedProgramUtils {
 
 	private static final String PYTHON_GATEWAY_CLASS_NAME = "org.apache.flink.client.python.PythonGatewayServer";
 
-	public static final String PYTHON_DRIVER_CLASS_NAME = "org.apache.flink.client.python.PythonDriver";
+	private static final String PYTHON_DRIVER_CLASS_NAME = "org.apache.flink.client.python.PythonDriver";
 
 	/**
 	 * Creates a {@link JobGraph} with a specified {@link JobID}
@@ -226,6 +226,10 @@ public enum PackagedProgramUtils {
 		} catch (MalformedURLException e) {
 			throw new RuntimeException("URL is invalid. This should not happen.", e);
 		}
+	}
+
+	public static String getPythonDriverClassName() {
+		return PYTHON_DRIVER_CLASS_NAME;
 	}
 
 	public static URI resolveURI(String path) throws URISyntaxException {

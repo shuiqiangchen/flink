@@ -183,21 +183,25 @@ public class CliFrontend {
 		final CustomCommandLine activeCommandLine =
 				validateAndGetActiveCommandLine(checkNotNull(commandLine));
 
-		ProgramOptions programOptions;
+		final ApplicationDeployer deployer =
+			new ApplicationClusterDeployer(clusterClientServiceLoader);
 
+		final ProgramOptions programOptions;
+		final Configuration effectiveConfiguration;
+
+		// No need to set a jarFile path for Pyflink job.
 		if (ProgramOptionsUtils.isPythonEntryPoint(commandLine)) {
-			programOptions = ProgramOptionsUtils.createPythonApplicationProgramOptions(commandLine);
+			programOptions = ProgramOptionsUtils.createPythonProgramOptions(commandLine);
+			effectiveConfiguration = getEffectiveConfiguration(
+				activeCommandLine, commandLine, programOptions, Collections.EMPTY_LIST);
 		} else {
 			programOptions = new ProgramOptions(commandLine);
+			programOptions.validate();
+			final URI uri = PackagedProgramUtils.resolveURI(programOptions.getJarFilePath());
+			effectiveConfiguration = getEffectiveConfiguration(
+				activeCommandLine, commandLine, programOptions, Collections.singletonList(uri.toString()));
 		}
 
-		final ApplicationDeployer deployer =
-				new ApplicationClusterDeployer(clusterClientServiceLoader);
-
-		programOptions.validate();
-		final URI uri = PackagedProgramUtils.resolveURI(programOptions.getJarFilePath());
-		final Configuration effectiveConfiguration = getEffectiveConfiguration(
-				activeCommandLine, commandLine, programOptions, Collections.singletonList(uri.toString()));
 		final ApplicationConfiguration applicationConfiguration =
 				new ApplicationConfiguration(programOptions.getProgramArgs(), programOptions.getEntryPointClassName());
 		deployer.run(effectiveConfiguration, applicationConfiguration);

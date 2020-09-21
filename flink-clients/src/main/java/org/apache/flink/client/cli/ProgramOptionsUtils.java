@@ -24,7 +24,6 @@ import org.apache.flink.configuration.Configuration;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
-import org.apache.commons.io.FilenameUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -99,22 +98,7 @@ public enum ProgramOptionsUtils {
 		}
 	}
 
-	public static ProgramOptions createPythonApplicationProgramOptions(CommandLine line) throws CliArgsException,
-		NoSuchFieldException, IllegalAccessException {
-		ProgramOptions pythonProgramOptions = createPythonProgramOptions(line);
-		Field jarFilePath = pythonProgramOptions.getClass().getSuperclass().getDeclaredField("jarFilePath");
-		jarFilePath.setAccessible(true);
-		// This is the python jar path in client, which is invalid at runtime and it will be replaced with the actual
-		// path when retrieving the packaged program in the job manager container.
-		String pythonJarPath = "local:///opt/flink/opt/" + FilenameUtils.getName(PackagedProgramUtils.getPythonJar()
-			.getPath());
-		jarFilePath.set(pythonProgramOptions, pythonJarPath);
-		return pythonProgramOptions;
-	}
-
-	public static void configurePythonExecution(Configuration configuration,
-												PackagedProgram packagedProgram) throws CliArgsException,
-		NoSuchFieldException, IllegalAccessException {
+	public static void configurePythonExecution(Configuration configuration, PackagedProgram packagedProgram) throws CliArgsException, NoSuchFieldException, IllegalAccessException {
 
 			final Options commandOptions = CliFrontendParser.getRunCommandOptions();
 			final CommandLine commandLine = CliFrontendParser.parse(commandOptions, packagedProgram.getArguments(),
