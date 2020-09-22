@@ -56,3 +56,24 @@ wait_rest_endpoint_up_k8s $jm_pod_name
 kubectl logs -f $jm_pod_name >$LOCAL_LOGS_PATH/jobmanager.log
 grep -E "Job [A-Za-z0-9]+ reached globally terminal state FINISHED" $LOCAL_LOGS_PATH/jobmanager.log
 
+CLUSTER_ID="flink-native-k8s-python-application-1"
+
+# Set the memory and cpu smaller than default, so that the jobmanager and taskmanager pods could be allocated in minikube.
+"$FLINK_DIR"/bin/flink run-application -t kubernetes-application \
+    -Dkubernetes.cluster-id=${CLUSTER_ID} \
+    -Dkubernetes.container.image=${FLINK_IMAGE_NAME} \
+    -Djobmanager.memory.process.size=1088m \
+    -Dkubernetes.jobmanager.cpu=0.5 \
+    -Dkubernetes.taskmanager.cpu=0.5 \
+    -Dkubernetes.rest-service.exposed.type=NodePort \
+    -pym scala_function -pyfs /opt/flink/examples/python/table/udf
+
+kubectl wait --for=condition=Available --timeout=30s deploy/${CLUSTER_ID} || exit 1
+jm_pod_name=$(kubectl get pods --selector="app=${CLUSTER_ID},component=jobmanager" -o jsonpath='{..metadata.name}')
+wait_rest_endpoint_up_k8s $jm_pod_name
+
+# The Flink cluster will be destroyed immediately once the job finished or failed. So we check jobmanager logs
+# instead of checking the result
+kubectl logs -f $jm_pod_name >$LOCAL_LOGS_PATH/jobmanager.log
+grep -E "Job [A-Za-z0-9]+ reached globally terminal state FINISHED" $LOCAL_LOGS_PATH/jobmanager.log
+

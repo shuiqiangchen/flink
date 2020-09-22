@@ -193,7 +193,7 @@ public class CliFrontend {
 		if (ProgramOptionsUtils.isPythonEntryPoint(commandLine)) {
 			programOptions = ProgramOptionsUtils.createPythonProgramOptions(commandLine);
 			effectiveConfiguration = getEffectiveConfiguration(
-				activeCommandLine, commandLine, programOptions, Collections.EMPTY_LIST);
+				activeCommandLine, commandLine, programOptions, Collections.emptyList());
 		} else {
 			programOptions = new ProgramOptions(commandLine);
 			programOptions.validate();

@@ -104,4 +104,25 @@ public class PythonProgramOptionsTest {
 			new String[] {"--python", "xxx.py", "--pyModule", "xxx", "userarg1", "userarg2"},
 			programOptions.getProgramArgs());
 	}
+
+	@Test
+	public void testConfigurePythonExecution() throws IllegalAccessException, NoSuchFieldException, CliArgsException {
+		Configuration configuration = new Configuration();
+		String[] args = new String[] {"-py", "test.py", "-pym", "test", "-pyfs",
+			"test1.py,test2.zip,test3.egg,test4_dir", "-pyreq", "a.txt#b_dir", "-pyarch", "c.zip#venv,d.zip", "-pyexec",
+			"bin/python", "userarg1", "userarg2"};
+		CommandLine line = CliFrontendParser.parse(options, args, false);
+		ProgramOptions programOptions = ProgramOptions.create(line);
+
+		ProgramOptionsUtils.setPythonConfiguration(configuration, programOptions);
+
+		assertEquals("test1.py,test2.zip,test3.egg,test4_dir", configuration.get(PythonOptions.PYTHON_FILES));
+		assertEquals("a.txt#b_dir", configuration.get(PYTHON_REQUIREMENTS));
+		assertEquals("c.zip#venv,d.zip", configuration.get(PythonOptions.PYTHON_ARCHIVES));
+		assertEquals("bin/python", configuration.get(PYTHON_EXECUTABLE));
+		assertArrayEquals(
+			new String[] {"--python", "test.py", "--pyModule", "test", "userarg1", "userarg2"},
+			programOptions.getProgramArgs());
+	}
+
 }
