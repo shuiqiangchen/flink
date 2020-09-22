@@ -112,14 +112,10 @@ public enum ProgramOptionsUtils {
 			argsField.setAccessible(true);
 			argsField.set(packagedProgram, programArgs);
 
-			setPythonConfiguration(configuration, programOptions);
-	}
-
-	protected static void setPythonConfiguration(Configuration configuration, ProgramOptions programOptions) throws NoSuchFieldException, IllegalAccessException {
-		//PyFlink dependency configurations are set in the pythonConfiguration when constructing the program option,
-		// we need to get the python configuration and merge with the execution configuration.
-		Field pythonConfiguration = programOptions.getClass().getDeclaredField("pythonConfiguration");
-		pythonConfiguration.setAccessible(true);
-		configuration.addAll((Configuration) pythonConfiguration.get(programOptions));
+			//PyFlink dependency configurations are set in the pythonConfiguration when constructing the program option,
+			// we need to get the python configuration and merge with the execution configuration.
+			Field pythonConfiguration = programOptions.getClass().getDeclaredField("pythonConfiguration");
+			pythonConfiguration.setAccessible(true);
+			configuration.addAll((Configuration) pythonConfiguration.get(programOptions));
 	}
 }

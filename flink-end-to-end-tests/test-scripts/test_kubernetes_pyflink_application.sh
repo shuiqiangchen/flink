@@ -20,7 +20,7 @@
 source "$(dirname "$0")"/common_kubernetes.sh
 
 CLUSTER_ROLE_BINDING="flink-role-binding-default"
-CLUSTER_ID="flink-native-k8s-application-1"
+CLUSTER_ID="flink-native-k8s-pyflink-application-1"
 FLINK_IMAGE_NAME="test_kubernetes_application"
 LOCAL_LOGS_PATH="${TEST_DATA_DIR}/log"
 
@@ -45,7 +45,7 @@ mkdir -p "$LOCAL_LOGS_PATH"
     -Dkubernetes.jobmanager.cpu=0.5 \
     -Dkubernetes.taskmanager.cpu=0.5 \
     -Dkubernetes.rest-service.exposed.type=NodePort \
-    local:///opt/flink/examples/batch/WordCount.jar
+    -pym word_count -pyfs /opt/flink/examples/python/table/batch
 
 kubectl wait --for=condition=Available --timeout=30s deploy/${CLUSTER_ID} || exit 1
 jm_pod_name=$(kubectl get pods --selector="app=${CLUSTER_ID},component=jobmanager" -o jsonpath='{..metadata.name}')
