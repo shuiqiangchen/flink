@@ -92,7 +92,7 @@ public class PythonProgramOptionsTest {
 	}
 
 	@Test
-	public void testCreateProgramOzptionsWithLongOptions() throws CliArgsException {
+	public void testCreateProgramOptionsWithLongOptions() throws CliArgsException {
 		String[] args = {
 			"--python", "xxx.py",
 			"--pyModule", "xxx",
@@ -117,7 +117,7 @@ public class PythonProgramOptionsTest {
 
 	@Test
 	public void testConfigurePythonExecution() throws IllegalAccessException, NoSuchFieldException, CliArgsException, ProgramInvocationException, IOException {
-		String[] args = {
+		final String[] args = {
 			"--python", "xxx.py",
 			"--pyModule", "xxx",
 			"--pyFiles", "/absolute/a.py,relative/b.py,relative/c.py",
