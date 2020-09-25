@@ -19,6 +19,7 @@
 
 source "$(dirname "$0")"/common_kubernetes.sh
 
+CURRENT_DIR=`cd "$(dirname "$0")" && pwd -P`
 CLUSTER_ROLE_BINDING="flink-role-binding-default"
 CLUSTER_ID="flink-native-k8s-pyflink-application-1"
 PURE_FLINK_IMAGE_NAME="test_kubernetes_application"
