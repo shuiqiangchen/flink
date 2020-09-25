@@ -21,7 +21,8 @@ source "$(dirname "$0")"/common_kubernetes.sh
 
 CLUSTER_ROLE_BINDING="flink-role-binding-default"
 CLUSTER_ID="flink-native-k8s-pyflink-application-1"
-FLINK_IMAGE_NAME="test_kubernetes_application"
+PURE_FLINK_IMAGE_NAME="test_kubernetes_application"
+PYFLINK_IMAGE_NAME="test_kubernetes_pyflink_application"
 LOCAL_LOGS_PATH="${TEST_DATA_DIR}/log"
 
 function internal_cleanup {
@@ -31,7 +32,29 @@ function internal_cleanup {
 
 start_kubernetes
 
-build_image ${FLINK_IMAGE_NAME}
+build_image ${PURE_FLINK_IMAGE_NAME}
+
+# Build PyFlink wheel package
+FLINK_PYTHON_DIR=`cd "${CURRENT_DIR}/../../flink-python" && pwd -P`
+cd ${FLINK_PYTHON_DIR}
+# use lint-python.sh script to create a python environment.
+dev/lint-python.sh -s basic
+source dev/.conda/bin/activate
+pip install -r dev/dev-requirements.txt
+python setup.py sdist
+conda deactivate
+PYFLINK_PACKAGE_FILE=$(basename "${FLINK_PYTHON_DIR}"/dist/apache-flink-*.tar.gz)
+
+# Create a new docker image that has python and PyFlink installed.
+PYFLINK_DOCKER_DIR="$TEST_DATA_DIR/pyflink_docker"
+mkidr -p "$PYFLINK_DOCKER_DIR"
+cp "dist/${PYFLINK_PACKAGE_FILE}" $PYFLINK_DOCKER_DIR/
+cd ${PYFLINK_DOCKER_DIR}
+echo "FROM ${PURE_FLINK_IMAGE_NAME}" >> Dockerfile
+echo "RUN apt-get update -y && apt-get install -y python3.7 python3-pip python3.7-dev && rm -rf /var/lib/apt/lists/*" >> Dockerfile
+echo "ADD ${PYFLINK_PACKAGE_FILE} ${PYFLINK_PACKAGE_FILE}" >> Dockerfile
+echo "RUN pip3 install ${PYFLINK_PACKAGE_FILE}" >> Dockerfile
+docker build -t ${PYFLINK_IMAGE_NAME} .
 
 kubectl create clusterrolebinding ${CLUSTER_ROLE_BINDING} --clusterrole=edit --serviceaccount=default:default --namespace=default
 
@@ -40,7 +63,7 @@ mkdir -p "$LOCAL_LOGS_PATH"
 # Set the memory and cpu smaller than default, so that the jobmanager and taskmanager pods could be allocated in minikube.
 "$FLINK_DIR"/bin/flink run-application -t kubernetes-application \
     -Dkubernetes.cluster-id=${CLUSTER_ID} \
-    -Dkubernetes.container.image=${FLINK_IMAGE_NAME} \
+    -Dkubernetes.container.image=${PYFLINK_IMAGE_NAME} \
     -Djobmanager.memory.process.size=1088m \
     -Dkubernetes.jobmanager.cpu=0.5 \
     -Dkubernetes.taskmanager.cpu=0.5 \
