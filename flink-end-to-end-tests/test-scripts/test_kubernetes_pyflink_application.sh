@@ -44,7 +44,7 @@ source dev/.conda/bin/activate
 pip install -r dev/dev-requirements.txt
 python setup.py bdist_wheel
 conda deactivate
-PYFLINK_PACKAGE_FILE=$(basename "${FLINK_PYTHON_DIR}"/dist/apache-flink-*.whl)
+PYFLINK_PACKAGE_FILE=$(basename "${FLINK_PYTHON_DIR}"/dist/apache_flink-*.whl)
 echo ${PYFLINK_PACKAGE_FILE}
 # Create a new docker image that has python and PyFlink installed.
 PYFLINK_DOCKER_DIR="$TEST_DATA_DIR/pyflink_docker"
