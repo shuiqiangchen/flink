@@ -56,8 +56,8 @@ echo "FROM ${PURE_FLINK_IMAGE_NAME}" >> Dockerfile
 echo "RUN apt-get update -y && apt-get install -y python3.7 python3-pip python3.7-dev && rm -rf /var/lib/apt/lists/*" >> Dockerfile
 echo "RUN which python3" >> Dockerfile
 echo "RUN ln -s /usr/bin/python3 /usr/bin/python" >> Dockerfile
-echo "ADD ${PYFLINK_PACKAGE_FILE} ${PYFLINK_PACKAGE_FILE}" >> Dockerfile
-echo "RUN pip3 install ./${PYFLINK_PACKAGE_FILE}" >> Dockerfile
+echo "COPY ${PYFLINK_PACKAGE_FILE} ${PYFLINK_PACKAGE_FILE}" >> Dockerfile
+echo "RUN pip3 install ${PYFLINK_PACKAGE_FILE}" >> Dockerfile
 echo "RUN rm ${PYFLINK_PACKAGE_FILE}" >> Dockerfile
 ls .
 docker build -t ${PYFLINK_IMAGE_NAME} .
