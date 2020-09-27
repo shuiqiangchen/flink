@@ -40,7 +40,7 @@ FLINK_PYTHON_DIR=`cd "${CURRENT_DIR}/../../flink-python" && pwd -P`
 cd ${FLINK_PYTHON_DIR}
 if [[ -d "dist" ]]; then rm -Rf dist; fi
 # use lint-python.sh script to create a python environment.
-dev/lint-python.sh -s basic
+dev/lint-python.sh -s miniconda
 source dev/.conda/bin/activate
 pip install -r dev/dev-requirements.txt
 python setup.py sdist
