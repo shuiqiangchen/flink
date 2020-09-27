@@ -38,13 +38,14 @@ build_image ${PURE_FLINK_IMAGE_NAME}
 # Build PyFlink wheel package
 FLINK_PYTHON_DIR=`cd "${CURRENT_DIR}/../../flink-python" && pwd -P`
 cd ${FLINK_PYTHON_DIR}
+if [[ -d "dist" ]]; then rm -Rf dist; fi
 # use lint-python.sh script to create a python environment.
 dev/lint-python.sh -s basic
 source dev/.conda/bin/activate
 pip install -r dev/dev-requirements.txt
-python setup.py bdist_wheel
+python setup.py sdist
 conda deactivate
-PYFLINK_PACKAGE_FILE=$(basename "${FLINK_PYTHON_DIR}"/dist/apache_flink-*.whl)
+PYFLINK_PACKAGE_FILE=$(basename "${FLINK_PYTHON_DIR}"/dist/apache-flink-*.tar.gz)
 echo ${PYFLINK_PACKAGE_FILE}
 # Create a new docker image that has python and PyFlink installed.
 PYFLINK_DOCKER_DIR="$TEST_DATA_DIR/pyflink_docker"
@@ -56,7 +57,7 @@ echo "RUN apt-get update -y && apt-get install -y python3.7 python3-pip python3.
 echo "RUN which python3" >> Dockerfile
 echo "RUN ln -s /usr/bin/python3 /usr/bin/python" >> Dockerfile
 echo "ADD ${PYFLINK_PACKAGE_FILE} ${PYFLINK_PACKAGE_FILE}" >> Dockerfile
-echo "RUN pip3 install ${PYFLINK_PACKAGE_FILE}" >> Dockerfile
+echo "RUN pip3 install ./${PYFLINK_PACKAGE_FILE}" >> Dockerfile
 echo "RUN rm ${PYFLINK_PACKAGE_FILE}" >> Dockerfile
 ls .
 docker build -t ${PYFLINK_IMAGE_NAME} .
