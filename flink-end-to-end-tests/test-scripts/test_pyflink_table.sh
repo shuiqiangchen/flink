@@ -39,7 +39,7 @@ source "${CONDA_HOME}/bin/activate"
 
 cd "${FLINK_PYTHON_DIR}"
 
-rm -rf dist
+if [[ -d "dist" ]]; then rm -Rf dist; fi
 
 python setup.py sdist
 

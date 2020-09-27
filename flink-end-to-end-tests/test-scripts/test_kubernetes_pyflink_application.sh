@@ -51,6 +51,7 @@ echo ${PYFLINK_PACKAGE_FILE}
 PYFLINK_DOCKER_DIR="$TEST_DATA_DIR/pyflink_docker"
 mkdir -p "$PYFLINK_DOCKER_DIR"
 cp "${FLINK_PYTHON_DIR}/dist/${PYFLINK_PACKAGE_FILE}" $PYFLINK_DOCKER_DIR/
+if [[ -d "dist" ]]; then rm -Rf dist; fi
 cd ${PYFLINK_DOCKER_DIR}
 echo "FROM ${PURE_FLINK_IMAGE_NAME}" >> Dockerfile
 echo "RUN apt-get update -y && apt-get install -y python3.7 python3-pip python3.7-dev && rm -rf /var/lib/apt/lists/*" >> Dockerfile
