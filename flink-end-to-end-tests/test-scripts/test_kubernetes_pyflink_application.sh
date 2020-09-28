@@ -22,7 +22,7 @@ source "$(dirname "$0")"/common_kubernetes.sh
 CURRENT_DIR=`cd "$(dirname "$0")" && pwd -P`
 CLUSTER_ROLE_BINDING="flink-role-binding-default"
 CLUSTER_ID="flink-native-k8s-pyflink-application-1"
-PURE_FLINK_IMAGE_NAME="test_kubernetes_application"
+PURE_FLINK_IMAGE_NAME="test_kubernetes_application-1"
 PYFLINK_IMAGE_NAME="test_kubernetes_pyflink_application"
 LOCAL_LOGS_PATH="${TEST_DATA_DIR}/log"
 
@@ -35,16 +35,40 @@ start_kubernetes
 
 build_image ${PURE_FLINK_IMAGE_NAME}
 
-# Build PyFlink wheel package
+
 FLINK_PYTHON_DIR=`cd "${CURRENT_DIR}/../../flink-python" && pwd -P`
-cd ${FLINK_PYTHON_DIR}
+
+CONDA_HOME="${FLINK_PYTHON_DIR}/dev/.conda"
+
+"${FLINK_PYTHON_DIR}/dev/lint-python.sh" -s miniconda
+
+PYTHON_EXEC="${CONDA_HOME}/bin/python"
+
+source "${CONDA_HOME}/bin/activate"
+
+cd "${FLINK_PYTHON_DIR}"
+
 if [[ -d "dist" ]]; then rm -Rf dist; fi
-# use lint-python.sh script to create a python environment.
-dev/lint-python.sh -s miniconda
-source dev/.conda/bin/activate
-pip install -r dev/dev-requirements.txt
+
 python setup.py sdist
-conda deactivate
+
+cd dev
+
+rm -rf .conda/pkgs
+
+deactivate
+
+
+# Build PyFlink wheel package
+#FLINK_PYTHON_DIR=`cd "${CURRENT_DIR}/../../flink-python" && pwd -P`
+#cd ${FLINK_PYTHON_DIR}
+#if [[ -d "dist" ]]; then rm -Rf dist; fi
+## use lint-python.sh script to create a python environment.
+#dev/lint-python.sh -s miniconda
+#source dev/.conda/bin/activate
+#pip install -r dev/dev-requirements.txt
+#python setup.py sdist
+#conda deactivate
 PYFLINK_PACKAGE_FILE=$(basename "${FLINK_PYTHON_DIR}"/dist/apache-flink-*.tar.gz)
 echo ${PYFLINK_PACKAGE_FILE}
 # Create a new docker image that has python and PyFlink installed.
