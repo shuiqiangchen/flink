@@ -182,13 +182,13 @@ public abstract class BeamPythonFunctionRunner implements PythonFunctionRunner {
 	private final String functionUrn;
 
 	public BeamPythonFunctionRunner(
-			String taskName,
-			PythonEnvironmentManager environmentManager,
-			String functionUrn,
-			Map<String, String> jobOptions,
-			FlinkMetricContainer flinkMetricContainer,
-			@Nullable KeyedStateBackend keyedStateBackend,
-			@Nullable TypeSerializer keySerializer) {
+		String taskName,
+		PythonEnvironmentManager environmentManager,
+		String functionUrn,
+		Map<String, String> jobOptions,
+		FlinkMetricContainer flinkMetricContainer,
+		@Nullable KeyedStateBackend keyedStateBackend,
+		@Nullable TypeSerializer keySerializer) {
 		this.taskName = Preconditions.checkNotNull(taskName);
 		this.environmentManager = Preconditions.checkNotNull(environmentManager);
 		this.functionUrn = functionUrn;
@@ -474,8 +474,8 @@ public abstract class BeamPythonFunctionRunner implements PythonFunctionRunner {
 	}
 
 	private static StateRequestHandler getStateRequestHandler(
-			KeyedStateBackend keyedStateBackend,
-			TypeSerializer keySerializer) {
+		KeyedStateBackend keyedStateBackend,
+		TypeSerializer keySerializer) {
 		if (keyedStateBackend == null) {
 			return StateRequestHandler.unsupported();
 		} else {
@@ -522,7 +522,7 @@ public abstract class BeamPythonFunctionRunner implements PythonFunctionRunner {
 
 		@Override
 		public CompletionStage<BeamFnApi.StateResponse.Builder> handle(
-				BeamFnApi.StateRequest request) throws Exception {
+			BeamFnApi.StateRequest request) throws Exception {
 			BeamFnApi.StateKey.TypeCase typeCase = request.getStateKey().getTypeCase();
 			synchronized (keyedStateBackend) {
 				if (typeCase.equals(BeamFnApi.StateKey.TypeCase.BAG_USER_STATE)) {
@@ -534,15 +534,19 @@ public abstract class BeamPythonFunctionRunner implements PythonFunctionRunner {
 		}
 
 		private CompletionStage<BeamFnApi.StateResponse.Builder> handleBagState(
-				BeamFnApi.StateRequest request) throws Exception {
+			BeamFnApi.StateRequest request) throws Exception {
 			if (request.getStateKey().hasBagUserState()) {
 				BeamFnApi.StateKey.BagUserState bagUserState = request.getStateKey().getBagUserState();
 				// get key
 				byte[] keyBytes = bagUserState.getKey().toByteArray();
 				bais.setBuffer(keyBytes, 0, keyBytes.length);
 				Object key = keySerializer.deserialize(baisWrapper);
-				keyedStateBackend.setCurrentKey(
-					((RowDataSerializer) keyedStateBackend.getKeySerializer()).toBinaryRow((RowData) key));
+				if (keyedStateBackend.getKeySerializer() instanceof RowDataSerializer) {
+					keyedStateBackend.setCurrentKey(
+						((RowDataSerializer) keyedStateBackend.getKeySerializer()).toBinaryRow((RowData) key));
+				} else {
+					keyedStateBackend.setCurrentKey(key);
+				}
 			} else {
 				throw new RuntimeException("Unsupported bag state request: " + request);
 			}
@@ -566,7 +570,7 @@ public abstract class BeamPythonFunctionRunner implements PythonFunctionRunner {
 			if (listState.get() == null) {
 				return ret;
 			}
-			for (byte[] v: listState.get()) {
+			for (byte[] v : listState.get()) {
 				ret.add(ByteString.copyFrom(v));
 			}
 			return ret;
@@ -626,7 +630,7 @@ public abstract class BeamPythonFunctionRunner implements PythonFunctionRunner {
 				throw new RuntimeException(
 					String.format(
 						"State name corrupt detected: " +
-						"'%s' is used both as LIST state and '%s' state at the same time.",
+							"'%s' is used both as LIST state and '%s' state at the same time.",
 						stateName,
 						cachedStateDescriptor.getType()));
 			}

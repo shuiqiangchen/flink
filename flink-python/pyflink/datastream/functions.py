@@ -21,6 +21,7 @@ from typing import Union, Any
 
 from py4j.java_gateway import JavaObject
 
+from pyflink.common.state import ListState, ValueState
 from pyflink.java_gateway import get_gateway
 
 
@@ -466,3 +467,132 @@ class SinkFunction(JavaFunctionWrapper):
         :param sink_func: The java SinkFunction object or the full name of the SinkFunction class.
         """
         super(SinkFunction, self).__init__(sink_func)
+
+
+class RichFunction(Function):
+
+    @staticmethod
+    def open(self, parameters):
+        pass
+
+    @staticmethod
+    def close(self):
+        pass
+
+    @staticmethod
+    def get_runtime_context(self):
+        pass
+
+
+class AbstractRichFunction(RichFunction):
+    def __init__(self):
+        self._runtime_context: RuntimeContext = None
+
+    def set_runtime_context(self, ctx: 'RuntimeContext'):
+        self._runtime_context = ctx
+
+    def get_runtime_context(self):
+        return self._runtime_context
+
+    def open(self, parameters):
+        pass
+
+    def close(self):
+        pass
+
+
+class KeyedProcessFunction(AbstractRichFunction):
+
+    @abc.abstractmethod
+    def process_element(self, value, ctx, out):
+        pass
+
+    @abc.abstractmethod
+    def on_timer(self, timestamp, ctx, out):
+        pass
+
+    class Context(abc.ABC):
+
+        @abc.abstractmethod
+        def timestamp(self):
+            pass
+
+        @abc.abstractmethod
+        def timer_service(self):
+            pass
+
+        @abc.abstractmethod
+        def get_current_key(self):
+            pass
+
+    class OnTimeContext(Context):
+
+        @abc.abstractmethod
+        def time_domain(self):
+            pass
+
+        @abc.abstractmethod
+        def get_current_key(self):
+            pass
+
+
+class ProcessFunction(AbstractRichFunction):
+
+    @abc.abstractmethod
+    def process_element(self, value, ctx: 'Context', out: 'Collector'):
+        pass
+
+    @abc.abstractmethod
+    def on_timer(self, timestamp, ctx: 'OnTimeContext', out: 'Collector'):
+        pass
+
+    class Context(abc.ABC):
+        @abc.abstractmethod
+        def timestamp(self):
+            pass
+
+        @abc.abstractmethod
+        def timer_service(self):
+            pass
+
+    class OnTimeContext(Context):
+
+        @abc.abstractmethod
+        def time_domain(self):
+            pass
+
+
+class Collector(abc.ABC):
+
+    @abc.abstractmethod
+    def collect(self, a):
+        pass
+
+
+class TimerService(abc.ABC):
+
+    @abc.abstractmethod
+    def current_processing_time(self):
+        pass
+
+
+class InternalProcessFunctionContext(ProcessFunction.Context):
+    def __init__(self, time_service):
+        self._time_service: TimerService = time_service
+
+    def timer_service(self):
+        return self._time_service
+
+    def timestamp(self):
+        pass
+
+
+class RuntimeContext(abc.ABC):
+
+    @abc.abstractmethod
+    def get_list_state(self, descriptor) -> ListState:
+        pass
+
+    @abc.abstractmethod
+    def get_state(self, descriptor) -> ValueState:
+        pass

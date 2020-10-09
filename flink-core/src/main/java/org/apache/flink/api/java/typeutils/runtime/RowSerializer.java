@@ -214,7 +214,7 @@ public final class RowSerializer extends TypeSerializer<Row> {
 			}
 		}
 
-		return result;
+		return result;BeamPythonFunctionRunner
 	}
 
 	@Override

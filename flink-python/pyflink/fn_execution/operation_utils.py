@@ -16,10 +16,11 @@
 # limitations under the License.
 ################################################################################
 import datetime
-
-import cloudpickle
 from typing import Any, Tuple, Dict, List
 
+import cloudpickle
+
+from pyflink.common import Row
 from pyflink.fn_execution import flink_fn_execution_pb2
 from pyflink.serializers import PickleSerializer
 from pyflink.table.udf import DelegationTableFunction, DelegatingScalarFunction, \
@@ -33,6 +34,7 @@ PANDAS_AGGREGATE_FUNCTION_URN = "flink:transform:aggregate_function:arrow:v1"
 PANDAS_BATCH_OVER_WINDOW_AGGREGATE_FUNCTION_URN = \
     "flink:transform:batch_over_window_aggregate_function:arrow:v1"
 
+DATA_STREAM_STATEFUL_FUNCTION_URN = "flink:transform:datastream_stateful_function:v1"
 _func_num = 0
 _constant_num = 0
 
@@ -142,6 +144,34 @@ def extract_data_stream_stateless_funcs(udfs):
                 value[2])
         func = wrap_func
     return func
+
+
+def extract_data_stream_stateful_funcs(udfs, ctx, collector, keyed_state_backend):
+    proc_func = cloudpickle.loads(udfs[0].payload)
+    process_element_func = proc_func.process_element
+    on_timer_func = proc_func.on_timer
+
+    def wrapped_func(value):
+        if value[0] is not None:
+            timer_key = value[2]
+            keyed_state_backend.set_current_key(timer_key)
+            on_timer_func(value[1], ctx, collector)
+        else:
+            current_key = Row(value[3][0])
+            keyed_state_backend.set_current_key(current_key)
+            real_data = value[3][1]
+            process_element_func(real_data, ctx, collector)
+
+        for a in collector.buf:
+            if a[0] == 2:
+                result_row = Row(None, None, None, a[1])
+                yield result_row
+            else:
+                result_row = Row(a[0], a[1], a[2], None)
+                yield result_row
+        collector.clear()
+
+    return wrapped_func, proc_func
 
 
 def _parse_constant_value(constant_value) -> Tuple[str, Any]:

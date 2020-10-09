@@ -21,7 +21,7 @@ from apache_beam.portability.api import beam_fn_api_pb2
 from apache_beam.runners.worker.bundle_processor import SynchronousBagRuntimeState
 from apache_beam.transforms import userstate
 
-from pyflink.common.state import ValueState
+from pyflink.common.state import ValueState, ListState
 
 
 class LRUCache(object):
@@ -91,6 +91,22 @@ class SynchronousValueRuntimeState(ValueState):
         self._internal_state.clear()
 
 
+class SynchronousListRuntimeState(ListState):
+
+    def __init__(self, internal_state: SynchronousBagRuntimeState):
+        self._internal_state = internal_state
+        self.is_valid = True
+
+    def add(self, v):
+        self._internal_state.add(v)
+
+    def get(self):
+        return self._internal_state.read()
+
+    def clear(self):
+        self._internal_state.clear()
+
+
 class RemoteKeyedStateBackend(object):
     """
     A keyed state backend provides methods for managing keyed state.
@@ -124,6 +140,15 @@ class RemoteKeyedStateBackend(object):
         value_state = SynchronousValueRuntimeState(internal_bag_state)
         self._all_states[name] = value_state
         return value_state
+
+    def get_list_state(self, name, value_coder):
+        if name in self._all_states:
+            self.validate_state(name, value_coder)
+            return self._all_states[name]
+        internal_bag_state = self._get_internal_bag_state(name, value_coder)
+        list_state = SynchronousListRuntimeState(internal_bag_state)
+        self._all_states[name] = list_state
+        return list_state
 
     def validate_state(self, name, coder):
         if name in self._all_states:
@@ -166,8 +191,12 @@ class RemoteKeyedStateBackend(object):
 
     def commit(self):
         self._all_internal_states.evict_all()
+        for state_name, state_obj in self._all_states.items():
+            state_obj.is_valid = False
         self._all_states = {}
 
     def reset(self):
         self._all_internal_states.evict_all()
+        for state_name, state_obj in self._all_states:
+            state_obj.is_valid = False
         self._all_states = {}

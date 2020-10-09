@@ -24,12 +24,15 @@ from apache_beam.runners.worker.operations import Operation
 from apache_beam.utils.windowed_value import WindowedValue
 from typing import Tuple
 
+from pyflink.datastream.functions import InternalProcessFunctionContext
 from pyflink.fn_execution import flink_fn_execution_pb2, operation_utils
-from pyflink.fn_execution.coders import from_proto
+from pyflink.fn_execution.beam.beam_operations_common import InternalRuntimeContext
+from pyflink.fn_execution.coders import from_proto, from_type_info_proto
 from pyflink.fn_execution.operation_utils import extract_user_defined_aggregate_function
 from pyflink.fn_execution.state_impl import RemoteKeyedStateBackend
 from pyflink.fn_execution.aggregate import RowKeySelector, SimpleAggsHandleFunction, \
     GroupAggFunction
+from pyflink.fn_execution.stateful_operation_common import InternalCollector, InternalTimerService
 from pyflink.metrics.metricbase import GenericMetricGroup
 from pyflink.table import FunctionContext, Row
 from pyflink.table.functions import Count1AggFunction
@@ -368,6 +371,27 @@ class StreamGroupAggregateOperation(StatefulFunctionOperation):
         super().teardown()
 
 
+class DataStreamStatefulFunctionOperation(StatefulFunctionOperation):
+    def __init__(self, name, spec, counter_factory, sampler, consumers, keyed_state_backend):
+        self._collector = InternalCollector()
+        self.runtime_context = InternalRuntimeContext(keyed_state_backend)
+        self.function_context = InternalProcessFunctionContext(
+            InternalTimerService(self._collector, self.runtime_context))
+        super(DataStreamStatefulFunctionOperation, self).__init__(
+            name, spec, counter_factory, sampler, consumers, keyed_state_backend)
+
+    def open_func(self):
+        for user_defined_func in self.user_defined_funcs:
+            user_defined_func.set_runtime_context(self.runtime_context)
+            user_defined_func.open(None)
+
+    def generate_func(self, udfs) -> tuple:
+        func, proc_func = operation_utils.extract_data_stream_stateful_funcs(
+            udfs=udfs, ctx=self.function_context, collector=self._collector,
+            keyed_state_backend=self.keyed_state_backend)
+        return lambda it: map(func, it), [proc_func]
+
+
 @bundle_processor.BeamTransformFactory.register_urn(
     operation_utils.SCALAR_FUNCTION_URN, flink_fn_execution_pb2.UserDefinedFunctions)
 def create_scalar_function(factory, transform_id, transform_proto, parameter, consumers):
@@ -385,7 +409,8 @@ def create_table_function(factory, transform_id, transform_proto, parameter, con
 @bundle_processor.BeamTransformFactory.register_urn(
     operation_utils.DATA_STREAM_STATELESS_FUNCTION_URN,
     flink_fn_execution_pb2.UserDefinedDataStreamFunctions)
-def create_data_stream_function(factory, transform_id, transform_proto, parameter, consumers):
+def create_data_stream_stateless_function(factory, transform_id, transform_proto, parameter,
+                                          consumers):
     return _create_user_defined_function_operation(
         factory, transform_proto, consumers, parameter, DataStreamStatelessFunctionOperation)
 
@@ -413,6 +438,16 @@ def create_pandas_over_window_aggregate_function(
 def create_aggregate_function(factory, transform_id, transform_proto, parameter, consumers):
     return _create_user_defined_function_operation(
         factory, transform_proto, consumers, parameter, StreamGroupAggregateOperation)
+
+
+@bundle_processor.BeamTransformFactory.register_urn(
+    operation_utils.DATA_STREAM_STATEFUL_FUNCTION_URN,
+    flink_fn_execution_pb2.UserDefinedDataStreamFunctions)
+def create_data_stream_stateful_function(factory, transform_id, transform_proto, parameter,
+                                         consumers):
+    return _create_stateful_user_defined_function_operation(
+        factory, transform_proto, consumers, parameter, transform_id,
+        DataStreamStatefulFunctionOperation)
 
 
 def _create_user_defined_function_operation(factory, transform_proto, consumers, udfs_proto,
@@ -448,3 +483,29 @@ def _create_user_defined_function_operation(factory, transform_proto, consumers,
             factory.counter_factory,
             factory.state_sampler,
             consumers)
+
+
+def _create_stateful_user_defined_function_operation(factory, transform_proto, consumers,
+                                                     udfs_proto, transform_id, operation_cls):
+    output_tags = list(transform_proto.outputs.keys())
+    output_coders = factory.get_output_coders(transform_proto)
+    spec = operation_specs.WorkerDoFn(
+        serialized_fn=udfs_proto,
+        output_tags=output_tags,
+        input=None,
+        side_inputs=None,
+        output_coders=[output_coders[tag] for tag in output_tags])
+    key_type_info = spec.serialized_fn.udfs[0].key_type_info
+    key_row_coder = from_type_info_proto(key_type_info.field[0].type)
+    keyed_state_backend = RemoteKeyedStateBackend(
+        factory.state_handler,
+        key_row_coder,
+        1000)
+
+    return operation_cls(
+        transform_proto.unique_name,
+        spec,
+        factory.counter_factory,
+        factory.state_sampler,
+        consumers,
+        keyed_state_backend)

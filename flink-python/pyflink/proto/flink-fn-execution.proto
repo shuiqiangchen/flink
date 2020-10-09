@@ -81,9 +81,11 @@ message UserDefinedDataStreamFunction {
     REDUCE = 2;
     CO_MAP = 3;
     CO_FLAT_MAP = 4;
+    PROCESS = 5;
   }
   FunctionType functionType = 1;
   bytes payload = 2;
+  TypeInfo key_type_info = 3;
 }
 
 // A list of user-defined DataStream functions to be executed in a batch.

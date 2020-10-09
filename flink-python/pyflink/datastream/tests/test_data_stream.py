@@ -19,10 +19,12 @@ import decimal
 import os
 import uuid
 
+from pyflink.common.serialization import SimpleStringSchema
+from pyflink.common.state import ListStateDescriptor, ValueStateDescriptor
 from pyflink.common.typeinfo import Types
 from pyflink.datastream import StreamExecutionEnvironment
 from pyflink.datastream.data_stream import DataStream
-from pyflink.datastream.functions import FilterFunction
+from pyflink.datastream.functions import FilterFunction, ProcessFunction
 from pyflink.datastream.functions import KeySelector
 from pyflink.datastream.functions import MapFunction, FlatMapFunction
 from pyflink.datastream.functions import CoMapFunction, CoFlatMapFunction
@@ -597,6 +599,23 @@ class DataStreamTests(PyFlinkTestCase):
         expected.sort()
         self.assertEqual(expected, results)
 
+    def test_process_function_with_state(self):
+
+        ds = DataStream(self.env._j_stream_execution_environment
+                        .socketTextStream('localhost', 9000))
+        self.env.set_parallelism(1)
+
+        def my_spliter(value):
+            datas = value.split(',')
+            return Row(datas[0], int(datas[1]), int(datas[2]))
+        mapped_stream = ds.map(my_spliter, output_type=Types.ROW([Types.STRING(), Types.INT(),
+                                                                  Types.INT()]))
+        mapped_stream.key_by(lambda x: x[1], key_type_info=Types.INT())\
+            .process(MyStateProcessFunction(), output_type=Types.STRING())\
+            ._j_data_stream.writeToSocket('localhost', 9999, SimpleStringSchema()
+                                          ._j_serialization_schema)
+        # self.env.execute("test process function")
+
     def tearDown(self) -> None:
         self.test_sink.clear()
 
@@ -644,3 +663,30 @@ class MyCoFlatMapFunction(CoFlatMapFunction):
     def flat_map2(self, value):
         if value[0] == 'b':
             yield value[0]
+
+
+class MyStateProcessFunction(ProcessFunction):
+
+    def open(self, parameters):
+        descriptor1 = ListStateDescriptor("list1", Types.STRING)
+        descriptor2 = ValueStateDescriptor("value1", Types.INT)
+        self.list_state1 = self.get_runtime_context().get_list_state(descriptor1)
+        self.value_state1 = self.get_runtime_context().get_state(descriptor2)
+
+    def process_element(self, value, ctx, out):
+        self.list_state1.add(value[0])
+        ite = self.list_state1.get()
+        result = ""
+        for v in ite:
+            result = result + "," + str(v)
+        out.collect("Current state1 value: " + result + '\n')
+        v = self.value_state1.value()
+        result = str(v)
+        out.collect("Current state2 value: " + result + '\n')
+        self.value_state1.update(value[2])
+        current_time = ctx.timer_service().current_processing_time()
+        out.collect("Current processing time: " + str(current_time) + '\n')
+        ctx.timer_service().register_processing_time_timer(current_time + 3000)
+
+    def on_timer(self, timestamp, ctx, out):
+        out.collect("current timer timestamp: " + str(timestamp) + '\n')

@@ -63,3 +63,38 @@ class ValueState(State, Generic[T]):
         key will be removed and the default value is returned on the next access.
         """
         pass
+
+
+class ListState(ABC):
+
+    @abstractmethod
+    def add(self, v):
+        pass
+
+    @abstractmethod
+    def get(self):
+        pass
+
+    @abstractmethod
+    def clear(self):
+        pass
+
+
+class StateDescriptor(ABC):
+    def __init__(self, name, type_info):
+        self.name = name
+        self.type_info = type_info
+
+    def get_name(self):
+        return self.name
+
+
+class ValueStateDescriptor(StateDescriptor):
+    def __init__(self, name, type_info):
+        super(ValueStateDescriptor, self).__init__(name, type_info)
+
+
+class ListStateDescriptor(StateDescriptor):
+
+    def __init__(self, name, type_info):
+        super(ListStateDescriptor, self).__init__(name, type_info)
