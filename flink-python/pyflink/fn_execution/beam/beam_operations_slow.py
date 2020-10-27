@@ -25,10 +25,12 @@ from apache_beam.runners.worker.operations import Operation
 from apache_beam.utils.windowed_value import WindowedValue
 from typing import Tuple
 
-from pyflink.datastream.functions import RuntimeContext
+from pyflink.fn_execution.stateful_operation_common import InternalCollector, InternalTimerService
+
+from pyflink.datastream.functions import RuntimeContext, InternalProcessFunctionContext
 from pyflink.fn_execution import flink_fn_execution_pb2, operation_utils
 from pyflink.fn_execution.beam.beam_coders import DataViewFilterCoder
-from pyflink.fn_execution.coders import from_proto
+from pyflink.fn_execution.coders import from_proto, from_type_info_proto
 from pyflink.fn_execution.operation_utils import extract_user_defined_aggregate_function
 from pyflink.fn_execution.state_impl import RemoteKeyedStateBackend
 from pyflink.fn_execution.aggregate import RowKeySelector, SimpleAggsHandleFunction, \
@@ -395,6 +397,21 @@ class StreamGroupAggregateOperation(StatefulFunctionOperation):
         super().teardown()
 
 
+class DataStreamStatefulFunctionOperation(StatefulFunctionOperation):
+
+    def __init__(self, name, spec, counter_factory, sampler, consumers, keyed_state_backend):
+        self._collector = InternalCollector()
+        self.function_context = InternalProcessFunctionContext(
+            InternalTimerService(self._collector, keyed_state_backend))
+        super(DataStreamStatefulFunctionOperation, self).__init__(name, spec, counter_factory,
+                                                                  sampler, consumers,
+                                                                  keyed_state_backend)
+
+    def generate_func(self, serialized_fn) -> tuple:
+        func, proc_func = operation_utils.extract_user_defined_stateful_function(
+            serialized_fn, self.function_context, self._collector, self.keyed_state_backend)
+        return func, proc_func
+
 @bundle_processor.BeamTransformFactory.register_urn(
     operation_utils.SCALAR_FUNCTION_URN, flink_fn_execution_pb2.UserDefinedFunctions)
 def create_scalar_function(factory, transform_id, transform_proto, parameter, consumers):
@@ -416,6 +433,14 @@ def create_data_stream_function(factory, transform_id, transform_proto, paramete
     return _create_user_defined_function_operation(
         factory, transform_proto, consumers, parameter, DataStreamStatelessFunctionOperation)
 
+
+@bundle_processor.BeamTransformFactory.register_urn(
+    operation_utils.DATA_STREAM_STATEFUL_FUNCTION_URN,
+    flink_fn_execution_pb2.UserDefinedDataStreamFunction)
+def create_data_stream_stateful_function(factory, transform_id, transform_proto, parameter,
+                                         consumers):
+    return _create_stateful_user_defined_function_operation(
+        factory, transform_proto, consumers, parameter, DataStreamStatefulFunctionOperation)
 
 @bundle_processor.BeamTransformFactory.register_urn(
     operation_utils.PANDAS_AGGREGATE_FUNCTION_URN, flink_fn_execution_pb2.UserDefinedFunctions)
@@ -477,3 +502,31 @@ def _create_user_defined_function_operation(factory, transform_proto, consumers,
             factory.counter_factory,
             factory.state_sampler,
             consumers)
+
+
+def _create_stateful_user_defined_function_operation(factory, transform_proto, consumers,
+                                                     udfs_proto, operation_cls):
+    output_tags = list(transform_proto.outputs.keys())
+    output_coders = factory.get_output_coders(transform_proto)
+    spec = operation_specs.WorkerDoFn(
+        serialized_fn=udfs_proto,
+        output_tags=output_tags,
+        input=None,
+        side_inputs=None,
+        output_coders=[output_coders[tag] for tag in output_coders])
+    key_type_info = spec.serialized_fn.key_type_info
+    key_row_coder = from_type_info_proto(key_type_info.field[0].type)
+    keyed_state_backed = RemoteKeyedStateBackend(
+        factory.state_handler,
+        key_row_coder,
+        1000,
+        1000,
+        1000)
+
+    return operation_cls(
+        transform_proto.unique_name,
+        spec,
+        factory.counter_factory,
+        factory.state_sampler,
+        consumers,
+        keyed_state_backed)

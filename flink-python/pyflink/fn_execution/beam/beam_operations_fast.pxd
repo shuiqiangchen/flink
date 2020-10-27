@@ -43,6 +43,22 @@ cdef class BeamTableFunctionOperation(BeamStatelessFunctionOperation):
 cdef class DataStreamStatelessFunctionOperation(BeamStatelessFunctionOperation):
     pass
 
+cdef class BeamStatefulFunctionOperation(BeamStatelessFunctionOperation):
+    cdef object keyed_state_backend
+
+cdef class BeamStreamGroupAggregateOperation(BeamStatefulFunctionOperation):
+    cdef object generate_update_before
+    cdef object grouping
+    cdef object group_agg_function
+    cdef object index_of_count_star
+    cdef object state_cache_size
+    cdef object state_cleaning_enabled
+
+cdef class BeamDataStreamStatefulFunctionOperation(BeamStatefulFunctionOperation):
+    cdef object _collector
+    cdef object runtime_context
+    cdef object function_context
+
 cdef class PandasAggregateFunctionOperation(BeamStatelessFunctionOperation):
     pass
 
