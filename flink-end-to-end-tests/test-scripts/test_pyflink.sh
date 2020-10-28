@@ -289,8 +289,7 @@ function send_msg_to_kafka {
 
     while read line
     do
-        echo "$line"
-        echo -e "$line" | ${KAFKA_HOME}/bin/kafka-console-producer.sh --broker-list localhost:9092 --topic timer-stream-source
+	 	send_messages_to_kafka "$line" "timer-stream-source"
         sleep 3
     done <<< "$1"
 }
