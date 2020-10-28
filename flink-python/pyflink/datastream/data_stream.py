@@ -24,7 +24,7 @@ from pyflink.datastream.functions import _get_python_env, FlatMapFunctionWrapper
     MapFunction, MapFunctionWrapper, Function, FunctionWrapper, SinkFunction, FilterFunction, \
     FilterFunctionWrapper, KeySelectorFunctionWrapper, KeySelector, ReduceFunction, \
     ReduceFunctionWrapper, CoMapFunction, CoFlatMapFunction, Partitioner, \
-    PartitionerFunctionWrapper, RuntimeContext
+    PartitionerFunctionWrapper, RuntimeContext, ProcessFunction
 from pyflink.java_gateway import get_gateway
 
 
@@ -441,7 +441,18 @@ class DataStream(object):
         """
         return DataStream(self._j_data_stream.broadcast())
 
-    def process(self, func, output_type: TypeInformation = None):
+    def process(self, func: ProcessFunction, output_type: TypeInformation = None):
+        """
+        Applies the given ProcessFunction on the input stream, thereby creating a transformed output
+        stream.
+
+        The function will be called for every element in the input streams and can produce zero or
+        more output elements.
+
+        :param func: The ProcessFunction that is called for each element in the stream.
+        :param output_type: TypeInformation for the result type of the function.
+        :return: The transformed DataStream.
+        """
         from pyflink.fn_execution import flink_fn_execution_pb2
         j_python_data_stream_function_operator, j_output_type_info = \
             self._get_java_python_function_operator(func,
