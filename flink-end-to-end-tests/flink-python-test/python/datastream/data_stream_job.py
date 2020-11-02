@@ -23,7 +23,7 @@ from pyflink.datastream.connectors import FlinkKafkaProducer
 from pyflink.datastream.functions import ProcessFunction, Collector
 from pyflink.table import StreamTableEnvironment
 
-from datastream.functions import MyKeySelector
+from functions import MyKeySelector
 
 
 def python_data_stream_example():
