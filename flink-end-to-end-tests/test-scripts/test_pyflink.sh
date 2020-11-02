@@ -231,21 +231,19 @@ PAYMENT_MSGS='{"createTime": "2020-10-26 10:30:13", "orderId": 1603679414, "payA
 {"createTime": "2020-10-26 10:32:02", "orderId": 1603679523, "payAmount": 81861.73063103345, "payPlatform": 0, "provinceId": 4}'
 
 function send_msg_to_kafka {
-
     while read line
     do
-	 	send_messages_to_kafka "$line" "timer-stream-source"
+	    send_messages_to_kafka "$line" "timer-stream-source"
         sleep 3
     done <<< "$1"
 }
 
 JOB_ID=$(${FLINK_DIR}/bin/flink run \
-    -p 2 \
     -pyfs "${FLINK_PYTHON_TEST_DIR}/python/datastream" \
     -pyreq "${REQUIREMENTS_PATH}" \
     -pyarch "${TEST_DATA_DIR}/venv.zip" \
     -pyexec "venv.zip/.conda/bin/python" \
-    -pym "data_stream_timer_job" \
+    -pym "data_stream_job" \
     -j "${KAFKA_SQL_JAR}")
 
 echo "${JOB_ID}"

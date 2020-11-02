@@ -26,7 +26,7 @@ from pyflink.table import StreamTableEnvironment
 from datastream.functions import MyKeySelector
 
 
-def test_ds_timer():
+def python_data_stream_example():
     env = StreamExecutionEnvironment.get_execution_environment()
     # Set the parallelism to be one to make sure that all data including fired timer and normal data
     # are processed by the same worker and the collected result would be in order which is good for
@@ -88,4 +88,4 @@ class MyProcessFunction(ProcessFunction):
 
 
 if __name__ == '__main__':
-    test_ds_timer()
+    python_data_stream_example()
