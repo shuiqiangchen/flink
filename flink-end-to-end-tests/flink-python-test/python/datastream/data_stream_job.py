@@ -50,7 +50,7 @@ def python_data_stream_example():
                   'connector.topic' = 'timer-stream-source',
                   'connector.properties.bootstrap.servers' = 'localhost:9092',
                   'connector.properties.group.id' = 'test_3',
-                  'connector.startup-mode' = 'latest-offset',
+                  'connector.startup-mode' = 'earliest-offset',
                   'format.type' = 'json'
                 )
                 """

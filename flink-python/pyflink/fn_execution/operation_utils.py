@@ -19,6 +19,8 @@ import datetime
 
 from typing import Any, Tuple, Dict, List
 
+from cloudpickle import cloudpickle
+
 from pyflink.common import Row
 from pyflink.datastream import TimeCharacteristic
 from pyflink.fn_execution import flink_fn_execution_pb2, pickle
@@ -121,7 +123,7 @@ def extract_data_stream_stateless_funcs(udf_proto):
     func = None
     # import pyflink.datastream.tests.test_data_stream
     # from pyflink.datastream.tests.test_data_stream import MyKeySelector
-    user_defined_func = pickle.loads(udf_proto.payload)
+    user_defined_func = cloudpickle.loads(udf_proto.payload)
     if func_type == UserDefinedDataStreamFunction.MAP:
         func = user_defined_func.map
     elif func_type == UserDefinedDataStreamFunction.FLAT_MAP:
@@ -246,7 +248,7 @@ def extract_user_defined_stateful_function(user_defined_function_proto, ctx, col
                                            keyed_state_backend):
 def extract_user_defined_stateful_function(user_defined_function_proto, ctx, on_timer_ctx,
                                            collector, keyed_state_backend):
-    proc_func = pickle.loads(user_defined_function_proto.payload)
+    proc_func = cloudpickle.loads(user_defined_function_proto.payload)
     process_element_func = proc_func.process_element
     on_timer_func = proc_func.on_timer
 
