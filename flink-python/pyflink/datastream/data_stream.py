@@ -29,7 +29,7 @@ from pyflink.datastream.functions import _get_python_env, FlatMapFunctionWrapper
 from pyflink.java_gateway import get_gateway
 
 
-class DataStream(object):
+class   DataStream(object):
     """
     A DataStream represents a stream of elements of the same type. A DataStream can be transformed
     into another DataStream by applying a transformation as for example:
@@ -504,8 +504,10 @@ class DataStream(object):
                     j_output_type,
                     j_data_stream_python_function_info,
                     watermark_strategy._j_watermark_strategy)
+            operator_name = gateway.jvm.org.apache.flink.python.util.PythonConfigUti\
+                .STREAM_TIMESTAMP_AND_WATERMARK_OPERATOR_NAME
             return DataStream(self._j_data_stream.transform(
-                "TIMESTAMP_AND_WATERMARK",
+                operator_name,
                 j_output_type,
                 j_operator))
         else:
