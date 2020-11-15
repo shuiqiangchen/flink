@@ -75,7 +75,7 @@ class KafkaRowTimestampAssigner(TimestampAssigner):
 
     def extract_timestamp(self, value: Any, record_timestamp: int) -> int:
         dt_obj = datetime.datetime.strptime(value[0], '%Y-%m-%d %H:%M:%S')
-        dt_obj.replace(tzinfo=datetime.timezone.utc)
+        dt_obj = dt_obj.replace(tzinfo=datetime.timezone.utc)
         return int(dt_obj.timestamp()*1000)
 
 

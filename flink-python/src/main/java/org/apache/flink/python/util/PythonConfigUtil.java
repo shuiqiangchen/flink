@@ -112,7 +112,8 @@ public class PythonConfigUtil {
 		}
 
 		if (streamNode.getOperatorName().equals(STREAM_KEY_BY_MAP_OPERATOR_NAME) ||
-			streamNode.getOperatorName().equals(STREAM_PARTITION_CUSTOM_MAP_OPERATOR_NAME)) {
+			streamNode.getOperatorName().equals(STREAM_PARTITION_CUSTOM_MAP_OPERATOR_NAME) ||
+			streamNode.getOperator() instanceof PythonTimestampsAndWatermarksOperator) {
 			StreamEdge upStreamEdge = streamNode.getInEdges().get(0);
 			StreamNode upStreamNode = streamGraph.getStreamNode(upStreamEdge.getSourceId());
 			chainStreamNode(upStreamEdge, streamNode, upStreamNode);
