@@ -16,7 +16,6 @@
 # limitations under the License.
 ################################################################################
 
-import datetime
 from typing import Any
 
 from pyflink.common import Duration

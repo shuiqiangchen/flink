@@ -31,9 +31,29 @@ sophisticated dataflow topologies.
 
 # DataStream Transformations
 
+## Basic Transformations
+
 DataStream programs in Flink are regular programs that implement transformations on data streams (e.g., mapping, 
 filtering, reducing). Please see [operators]({% link dev/stream/operators/index.md %}
 ?code_tab=python) for an overview of the available stream transformations in Python DataStream API.
+
+## The ProcessFunction and Timer
+
+The ProcessFunction is a low-level stream processing operation, giving access to the basic building
+blocks of all (acyclic) streaming applications. It can be thought of as a FlatMapFunction with access
+to keyed state and timers.. It handles events by being invoked for each event received in the input
+stream(s). And the KeyedProcessFunction gives access to keyed state and timers.
+
+The timers allow applications to react to changes in processing time and in event time. Every call to
+the function process_element() gets a Context object which gives access to the element’s event time
+timestamp, and to the TimerService. The TimerService can be used to register callbacks for future
+event-/processing-time instants. With event-time timers, the on_timer() method is called when the
+current watermark is advanced up to or beyond the timestamp of the timer, while with processing-time
+timers, on_timer() is called when wall clock time reaches the specified time. During that call,
+all states are again scoped to the key with which the timer was created, allowing timers to manipulate
+keyed state. For more details, please refer to [Process Function]({% link dev/stream/operators/process_function.md %}?code_tab=python).
+
+<span class="label label-info">Note</span> Please implement `KeyedProcessFunction` for `KeyedStream`s.
 
 # Functions
 Most transformations require a user-defined function as input to define the functionality of the transformation. The 
