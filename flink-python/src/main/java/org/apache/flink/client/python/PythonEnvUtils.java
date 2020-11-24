@@ -73,6 +73,8 @@ final class PythonEnvUtils {
 
 	static final String PYFLINK_CLIENT_EXECUTABLE = "PYFLINK_CLIENT_EXECUTABLE";
 
+	static Exception capturedJavaException = null;
+
 	/**
 	 * Wraps Python exec environment.
 	 */
@@ -314,7 +316,7 @@ final class PythonEnvUtils {
 	 * in a daemon thread to the ExecutorService.
 	 *
 	 * @param gatewayServer the gateway which creates the callback server.
-	 * */
+	 */
 	private static void resetCallbackClientExecutorService(GatewayServer gatewayServer) throws NoSuchFieldException,
 		IllegalAccessException, NoSuchMethodException, InvocationTargetException {
 		CallbackClient callbackClient = (CallbackClient) gatewayServer.getCallbackClient();
@@ -335,7 +337,7 @@ final class PythonEnvUtils {
 	 *
 	 * @param callbackServerListeningAddress the listening address of the callback server.
 	 * @param callbackServerListeningPort the listening port of the callback server.
-	 * */
+	 */
 	public static void resetCallbackClient(String callbackServerListeningAddress, int callbackServerListeningPort) throws
 		UnknownHostException, InvocationTargetException, NoSuchMethodException, IllegalAccessException,
 		NoSuchFieldException {

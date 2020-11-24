@@ -18,6 +18,8 @@
 import py4j
 from py4j.protocol import Py4JJavaError
 
+from pyflink.java_gateway import get_gateway
+
 
 class JavaException(Exception):
     def __init__(self, msg, stack_trace):
@@ -197,6 +199,7 @@ def convert_py4j_exception(e: Py4JJavaError) -> JavaException:
     def extract_java_stack_trace(java_stack_trace):
         return '\n\t at '.join(map(lambda x: x.toString(), java_stack_trace))
 
+    get_gateway().jvm.org.apache.flink.client.python.capturedJavaException = e.java_exception
     s = e.java_exception.toString()
     cause = e.java_exception.getCause()
     stack_trace = extract_java_stack_trace(e.java_exception.getStackTrace())
