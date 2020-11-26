@@ -148,8 +148,8 @@ def capture_java_exception(f):
         except Py4JJavaError as e:
             from pyflink.java_gateway import get_gateway
             print("Caught Java exception: " + e.java_exception.toString())
-            get_gateway().jvm.org.apache.flink.client.python.PythonEnvUtils.capturedJavaException =\
-                e.java_exception
+            get_gateway().jvm.org.apache.flink.client.python.PythonEnvUtils\
+                .setPythonException(e.java_exception)
             s = e.java_exception.toString()
             stack_trace = '\n\t at '.join(map(lambda x: x.toString(),
                                               e.java_exception.getStackTrace()))

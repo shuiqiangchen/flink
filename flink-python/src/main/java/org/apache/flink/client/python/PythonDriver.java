@@ -109,9 +109,11 @@ public final class PythonDriver {
 			if (PythonEnvUtils.capturedJavaException != null){
 				LOG.error("Python exception not null: " + PythonEnvUtils.capturedJavaException
 					.toString());
+			}else{
+				LOG.error("Python exception is null: " + PythonEnvUtils.capturedJavaException);
 			}
 
-			if (PythonEnvUtils.capturedJavaException instanceof UnsuccessfulExecutionException) {
+			if (PythonEnvUtils.capturedJavaException != null) {
 				throw PythonEnvUtils.capturedJavaException;
 			} else {
 				// throw ProgramAbortException if the caller is interested in the program plan,

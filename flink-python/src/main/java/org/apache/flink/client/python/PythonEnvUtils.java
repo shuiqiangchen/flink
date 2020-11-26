@@ -18,13 +18,11 @@
 
 package org.apache.flink.client.python;
 
+import org.apache.flink.client.deployment.application.UnsuccessfulExecutionException;
 import org.apache.flink.configuration.ConfigConstants;
 import org.apache.flink.configuration.ReadableConfig;
 import org.apache.flink.core.fs.Path;
-import org.apache.flink.util.FileUtils;
-import org.apache.flink.util.NetUtils;
-import org.apache.flink.util.OperatingSystem;
-import org.apache.flink.util.Preconditions;
+import org.apache.flink.util.*;
 
 import org.apache.flink.shaded.guava18.com.google.common.base.Strings;
 
@@ -376,5 +374,11 @@ final class PythonEnvUtils {
 		pythonEnv.systemEnv.put("PYFLINK_GATEWAY_PORT", String.valueOf(gatewayServer.getListeningPort()));
 		// start the python process.
 		return PythonEnvUtils.startPythonProcess(pythonEnv, commands, redirectToPipe);
+	}
+
+	public static void setPythonException(Exception pythonException){
+		if(ExceptionUtils.findThrowable(pythonException, UnsuccessfulExecutionException.class).isPresent()){
+			capturedJavaException = pythonException;
+		}
 	}
 }
