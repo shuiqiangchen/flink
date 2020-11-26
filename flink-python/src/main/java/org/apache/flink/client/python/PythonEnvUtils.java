@@ -114,9 +114,9 @@ final class PythonEnvUtils {
 	/**
 	 * Prepares PythonEnvironment to start python process.
 	 *
-	 * @param config The Python configurations.
+	 * @param config           The Python configurations.
 	 * @param entryPointScript The entry point script, optional.
-	 * @param tmpDir The temporary directory which files will be copied to.
+	 * @param tmpDir           The temporary directory which files will be copied to.
 	 * @return PythonEnvironment the Python environment which will be executed in Python process.
 	 */
 	static PythonEnvironment preparePythonEnvironment(
@@ -165,7 +165,7 @@ final class PythonEnvUtils {
 	 * @param symbolicLinkPath the symbolic link to pyflink lib.
 	 */
 	private static void createSymbolicLink(java.nio.file.Path libPath, java.nio.file.Path symbolicLinkPath)
-			throws IOException {
+		throws IOException {
 		try {
 			Files.createSymbolicLink(symbolicLinkPath, libPath);
 		} catch (IOException e) {
@@ -336,7 +336,7 @@ final class PythonEnvUtils {
 	 * after the callback server started.
 	 *
 	 * @param callbackServerListeningAddress the listening address of the callback server.
-	 * @param callbackServerListeningPort the listening port of the callback server.
+	 * @param callbackServerListeningPort    the listening port of the callback server.
 	 */
 	public static void resetCallbackClient(String callbackServerListeningAddress, int callbackServerListeningPort) throws
 		UnknownHostException, InvocationTargetException, NoSuchMethodException, IllegalAccessException,

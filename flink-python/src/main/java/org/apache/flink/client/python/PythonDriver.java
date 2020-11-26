@@ -18,12 +18,10 @@
 
 package org.apache.flink.client.python;
 
-import org.apache.flink.api.common.JobID;
 import org.apache.flink.api.java.ExecutionEnvironment;
 import org.apache.flink.client.deployment.application.UnsuccessfulExecutionException;
 import org.apache.flink.client.program.ProgramAbortException;
 import org.apache.flink.configuration.Configuration;
-import org.apache.flink.runtime.clusterframework.ApplicationStatus;
 import org.apache.flink.runtime.entrypoint.parser.CommandLineParser;
 
 import org.slf4j.Logger;
@@ -118,8 +116,9 @@ public final class PythonDriver {
 			} else {
 				// throw ProgramAbortException if the caller is interested in the program plan,
 				// there is no harm to throw ProgramAbortException even if it is not the case.
-				throw new UnsuccessfulExecutionException(JobID.generate(),
-					ApplicationStatus.CANCELED, "Cancle", null);
+//				throw new UnsuccessfulExecutionException(JobID.generate(),
+//					ApplicationStatus.CANCELED, "Cancle", null);
+				throw new ProgramAbortException();
 			}
 		} finally {
 			PythonEnvUtils.setGatewayServer(null);
