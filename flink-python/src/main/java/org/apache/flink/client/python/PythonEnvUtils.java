@@ -73,7 +73,7 @@ final class PythonEnvUtils {
 
 	static final String PYFLINK_CLIENT_EXECUTABLE = "PYFLINK_CLIENT_EXECUTABLE";
 
-	static Exception capturedJavaException = null;
+	static volatile Exception capturedJavaException = null;
 
 	/**
 	 * Wraps Python exec environment.
