@@ -677,7 +677,6 @@ class ProcessFunction(Function):
         :param ctx:  A Context that allows querying the timestamp of the element and getting a
                      TimerService for registering timers and querying the time. The context is only
                      valid during the invocation of this method, do not store it.
-        :param out: The collector for returning result values.
         """
         pass
 
@@ -752,7 +751,6 @@ class KeyedProcessFunction(Function, ABC):
         :param ctx:  A Context that allows querying the timestamp of the element and getting a
                      TimerService for registering timers and querying the time. The context is only
                      valid during the invocation of this method, do not store it.
-        :param out: The collector for returning result values.
         """
         pass
 
@@ -765,6 +763,5 @@ class KeyedProcessFunction(Function, ABC):
                     querying the TimeDomain of the firing timer and getting a TimerService for
                     registering timers and querying the time. The context is only valid during the
                     invocation of this method, do not store it.
-        :param out: The collector for returning result values.
         """
         pass
