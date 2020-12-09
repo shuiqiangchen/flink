@@ -201,3 +201,28 @@ class MapState(State, Generic[K, V]):
 
     def __iter__(self) -> Iterator[K]:
         return iter(self.keys())
+
+
+class StateDescriptor(ABC):
+    def __init__(self, name):
+        self.name = name
+
+    def get_name(self):
+        return self.name
+
+
+class ValueStateDescriptor(StateDescriptor):
+    def __init__(self, name):
+        super(ValueStateDescriptor, self).__init__(name)
+
+
+class ListStateDescriptor(StateDescriptor):
+
+    def __init__(self, name):
+        super(ListStateDescriptor, self).__init__(name)
+
+
+class MapStateDescriptor(StateDescriptor):
+
+    def __init__(self, name):
+        super(MapStateDescriptor, self).__init__(name)

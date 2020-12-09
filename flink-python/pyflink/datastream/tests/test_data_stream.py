@@ -740,6 +740,9 @@ class DataStreamTests(PyFlinkTestCase):
         expected_result.sort()
         self.assertEqual(expected_result, result)
 
+    def test_process_function_with_state(self):
+
+
     def tearDown(self) -> None:
         self.test_sink.clear()
 

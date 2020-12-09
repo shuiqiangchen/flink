@@ -22,6 +22,8 @@ from typing import Union, Any, Dict
 
 from py4j.java_gateway import JavaObject
 
+from pyflink.common.state import StateDescriptor, ValueState, ValueStateDescriptor, \
+    ListStateDescriptor, ListState, MapStateDescriptor, MapState
 from pyflink.datastream.time_domain import TimeDomain
 from pyflink.java_gateway import get_gateway
 
@@ -110,6 +112,15 @@ class RuntimeContext(object):
         Gets the global job parameter value associated with the given key as a string.
         """
         return self._job_parameters[key] if key in self._job_parameters else default_value
+
+    def get_state(self, state_descriptor: ValueStateDescriptor) -> ValueState:
+        pass
+
+    def get_list_state(self, state_descriptor: ListStateDescriptor) -> ListState:
+        pass
+
+    def get_map_state(self, state_descriptor: MapStateDescriptor) -> MapState:
+        pass
 
 
 class Function(abc.ABC):
